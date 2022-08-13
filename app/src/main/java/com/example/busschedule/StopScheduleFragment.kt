@@ -28,6 +28,7 @@ import com.example.busschedule.databinding.StopScheduleFragmentBinding
 import com.example.busschedule.viewmodels.BusScheduleViewModel
 import com.example.busschedule.viewmodels.BusScheduleViewModelFactory
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 class StopScheduleFragment: Fragment() {
@@ -76,7 +77,9 @@ class StopScheduleFragment: Fragment() {
         recyclerView.adapter = busStopAdapter
 
         lifecycleScope.launch(Dispatchers.IO) {
-            busStopAdapter.submitList(viewModel.scheduleForStopName(stopName))
+            viewModel.scheduleForStopName(stopName).collect {
+                busStopAdapter.submitList(it)
+            }
         }
     }
 
