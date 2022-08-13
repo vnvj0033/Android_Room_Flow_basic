@@ -64,8 +64,7 @@ class StopScheduleFragment: Fragment() {
         savedInstanceState: Bundle?
     ): View {
         _binding = StopScheduleFragmentBinding.inflate(inflater, container, false)
-        val view = binding.root
-        return view
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
