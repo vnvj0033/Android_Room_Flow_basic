@@ -1,3 +1,28 @@
+## ViewModel define
+```
+class MyViewModel(val dao: MyDao): ViewModel()
+
+// factory class
+class MyViewModelFactory(val dao: MyDao) : ViewModelProvider.Factory {
+  override fun <T : ViewModel> create(modelClass: Class<T>): T {
+     if (modelClass.isAssignableFrom(BusScheduleViewModel::class.java)) {
+         @Suppress("UNCHECKED_CAST")
+         return BusScheduleViewModel(scheduleDao) as T
+     }
+     throw IllegalArgumentException("Unknown ViewModel class")
+   }
+}
+
+// use viewmodel, this 
+private val viewModel: MyViewModel by activityViewModels {
+   MyViewModelFactory(myDao)
+}
+```
+## ViewModel Factory
+```
+
+```
+
 # Bus Scheduler App
 
 This folder contains the source code for the Bus Scheduler app codelab.<br />
