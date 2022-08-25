@@ -1,26 +1,75 @@
+## Flow
+```kotlin
+class BusScheduleViewModel(private val scheduleDao: ScheduleDao): ViewModel() {
+    fun fullSchedule(): Flow<List<Schedule>> = scheduleDao.getAll()
+}
+
+lifecycleScope.launch(Dispatchers.IO) {
+    viewModel.fullSchedule().collect {
+        busStopAdapter.submitList(it)
+    }
+}
+```
+
 ## ViewModel define
 ```
 class MyViewModel(val dao: MyDao): ViewModel()
 
-// factory class
-class MyViewModelFactory(val dao: MyDao) : ViewModelProvider.Factory {
-  override fun <T : ViewModel> create(modelClass: Class<T>): T {
-     if (modelClass.isAssignableFrom(BusScheduleViewModel::class.java)) {
-         @Suppress("UNCHECKED_CAST")
-         return BusScheduleViewModel(scheduleDao) as T
-     }
-     throw IllegalArgumentException("Unknown ViewModel class")
-   }
-}
-
-// use viewmodel, this 
-private val viewModel: MyViewModel by activityViewModels {
-   MyViewModelFactory(myDao)
-}
-```
-## ViewModel Factory
+// use viewmodel
+private val viewModel: MyViewModel by viewModels()
 ```
 
+## Room Database
+```kotlin
+@Database(entities = [Schedule::class], version = 1)
+abstract class AppDatabase: RoomDatabase() {
+
+    abstract fun scheduleDao(): ScheduleDao
+
+    companion object {
+
+        @Volatile
+        private var INSTANCE: AppDatabase? = null
+
+        fun getDatabase(context: Context): AppDatabase {
+            return INSTANCE ?: synchronized(this) {
+                val instance =
+                    Room.databaseBuilder(context, AppDatabase::class.java, "app_database")
+                        .createFromAsset("database/bus_schedule.db")
+                        .build()
+
+                INSTANCE = instance
+                instance
+            }
+        }
+    }
+}
+
+// use database
+val database: AppDatabase by lazy { AppDatabase.getDatabase(this) }
+```
+
+## Room DAO
+Flow를 사용하기 위해 return 타입을 Flow로 포장
+```kotlin
+@Dao
+interface ScheduleDao {
+    @Query("SELECT * FROM schedule ORDER BY arrival_time ASC")
+    fun getAll(): Flow<List<Schedule>> 
+
+    @Query("SELECT * FROM schedule WHERE stop_name = :stopName ORDER BY arrival_time ASC")
+    fun getByStopName(stopName: String): Flow<List<Schedule>>
+}
+```
+
+## Room entry
+```kotlin
+@Entity
+data class Schedule(
+   @PrimaryKey val id: Int,
+   @NonNull @ColumnInfo(name = "stop_name") val stopName: String,
+   @NonNull @ColumnInfo(name = "arrival_time") val arrivalTime: Int
+)
 ```
 
 # Bus Scheduler App
